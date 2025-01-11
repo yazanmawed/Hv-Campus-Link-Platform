@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="about_us_title">Hv Campus Link - About Us</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+</head>
+<body>
+
+    <!-- Navigation Icons -->
+    <div class="nav__links">
+        <a id="moonicon">
+            <i class="fa-sharp fa-solid fa-moon"></i>
+        </a>
+        <a id="langSwitch" data-lang="en" aria-label="Switch Language">Sv</a>
+        <!-- Menu Button -->
+        <a class="menu-btn" id="menuBtn" aria-label="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <!-- Menu Window (Initially Hidden) -->
+    <div id="menuWindow" class="menu-window hidden">
+        <div class="menu-header">
+            <span data-translate="menu">Menu</span>
+        </div>
+        <ul class="menu-list">
+            <li><a href="{{ url_for('main') }}" data-translate="home">Home</a></li>
+            <li><a href="{{ url_for('profile') }}" data-translate="my_profile">My Profile</a></li>
+            <li><a href="{{ url_for('programs') }}" data-translate="programs">Programs</a></li>
+            <li><a href="{{ url_for('book_main') }}" data-translate="book_exchange">Book Exchange</a></li>
+            <li><a href="{{ url_for('public_chat') }}" data-translate="public_chat">Public Chat</a></li>
+            <li><a href="{{ url_for('contact_us') }}" data-translate="contact_us">Contact Us</a></li>
+            <li><a href="{{ url_for('logout') }}" data-translate="log_out">Log Out</a></li>
+        </ul>
+    </div>
+
+    <!-- About Us Content -->
+    <div class="about-container">
+        <h1 data-translate="about_us_heading">About Us</h1>
+        <p data-translate="about_us_intro">
+            Welcome to University West Campus Link, a platform created with a single mission: to empower students at University West by providing easy access to resources, support, and community-driven solutions. We are a team of passionate developers and innovators who believe that every student deserves a clear path to success, regardless of where they are in their academic journey.
+        </p>
+
+        <h2 data-translate="our_mission">Our Mission</h2>
+        <p data-translate="our_mission_text">
+            Our goal is to streamline the academic experience for students by offering a one-stop hub where they can access study materials, exchange books, and get answers to their questions—both from an AI-driven chatbot and from senior students. We strive to create an inclusive and collaborative environment that simplifies the challenges of university life.
+        </p>
+
+        <h2 data-translate="what_we_offer">What We Offer</h2>
+        <ul>
+            <li data-translate="offer_course_resources">
+                <strong>Course Resources:</strong> Browse and download lecture notes, recommended YouTube channels, and other essential learning materials.
+            </li>
+            <li data-translate="offer_book_exchange">
+                <strong>Book Exchange:</strong> A student-run marketplace to buy and sell literature for your courses.
+            </li>
+            <li data-translate="offer_ai_chatbot">
+                <strong>AI Chatbot Assistance:</strong> Get quick answers to your questions through our AI chatbot, trained specifically to help with your academic queries.
+            </li>
+            <li data-translate="offer_peer_support">
+                <strong>Peer Support:</strong> Connect with senior students and fellow classmates for guidance and support on course content and university life.
+            </li>
+        </ul>
+
+        <h2 data-translate="our_team">Our Team</h2>
+        <p data-translate="our_team_intro">
+            Our team is made up of experienced backend and frontend developers, database experts, and quality assurance specialists. Together, we bring a blend of technical expertise and a shared commitment to making University West a place where students can thrive.
+        </p>
+
+        <h3 data-translate="developers_heading">Developers and Creators of University West Campus Link</h3>
+        <ul>
+            <li>Najem Aldeen Abu Hamdah</li>
+            <li>Yazan Almoued</li>
+            <li>Mohamad Anas Mohamad Nour</li>
+            <li>Moataz Haidar</li>
+            <li>Saleh Alshami</li>
+            <li>Semanur Kerpic</li>
+        </ul>
+    </div>
+
+    <!-- JavaScript for Menu -->
+    <script>
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch = document.getElementById("langSwitch");
+            langSwitch.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch.addEventListener("click", () => {
+                const newLang = langSwitch.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch.dataset.lang = newLang;
+                langSwitch.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        document.getElementById("menuBtn").addEventListener("click", function() {
+            const menuWindow = document.getElementById("menuWindow");
+            menuWindow.classList.toggle("visible");
+            menuWindow.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", function(event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+
+        // On page load, check the saved theme preference and apply it
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+
+            // If a theme is saved in localStorage, apply it
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";  // Show sun icon in dark mode
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";  // Show moon icon in light mode
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+
+            var iconElement = moonicon.querySelector("i");
+
+            // Check if dark theme is active and update the icon
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");  // Save dark mode in localStorage
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");  // Save light mode in localStorage
+            }
+        };
+    </script>
+
+</body>
+</html>

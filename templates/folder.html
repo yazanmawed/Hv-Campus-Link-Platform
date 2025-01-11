@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="folders_title">Hv Campus Link - Materials</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Icons -->
+    <div class="nav__links">
+        <a id="moonicon">
+            <i class="fa-sharp fa-solid fa-moon"></i>
+        </a>
+        <a id="langSwitch" data-lang="en" aria-label="Switch Language">Sv</a>
+        <a class="menu-btn" id="menuBtn" aria-label="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <div id="menuWindow" class="menu-window hidden">
+        <div class="menu-header">
+            <span data-translate="menu">Menu</span>
+        </div>
+        <ul class="menu-list">
+            <li><a href="{{ url_for('main') }}" data-translate="home">Home</a></li>
+            <li><a href="{{ url_for('profile') }}" data-translate="my_profile">My Profile</a></li>
+            <li><a href="{{ url_for('programs') }}" data-translate="programs">Programs</a></li>
+            <li><a href="{{ url_for('book_main') }}" data-translate="book_exchange">Book Exchange</a></li>
+            <li><a href="{{ url_for('public_chat') }}" data-translate="public_chat">Public Chat</a></li>
+            <li><a href="{{ url_for('contact_us') }}" data-translate="contact_us">Contact Us</a></li>
+            <li><a href="{{ url_for('logout') }}" data-translate="log_out">Log Out</a></li>
+        </ul>
+    </div>
+
+    <div class="course-container">
+        <div class="materials-upload-container">
+            <h1>{{ folder.folder_name }} by 
+                <a href="{{ url_for('public_profile', user_id=folder.user_id) }}">{{ folder.first_name }} {{ folder.last_name }}</a>
+            </h1>
+            
+            <!-- Message Section -->
+            {% if message %}
+            <div class="message {{ status }}">
+                <p>{{ message }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Materials Section -->
+            <div class="materials-container">
+                <!-- YouTube Videos Section -->
+                <div class="youtube-section">
+                    <h2 data-translate="youtube_videos">YouTube Videos</h2>
+                    {% for lang in ['English', 'Swedish', 'Arabic'] %}
+                    <div>
+                        <h3 data-translate="language_{{ lang|lower }}">{{ lang }}</h3>
+                        <ul>
+                            {% for material in materials if material.type == 'youtube' and material.language == lang and material.status == 'approved' %}
+                            <li>
+                                <a href="{{ material.link }}" target="_blank">{{ material.title }}</a>
+                                {% if is_owner %}
+                                <form method="POST" action="{{ url_for('upload_material') }}" style="display:inline;">
+                                    <input type="hidden" name="folder_id" value="{{ folder.id }}">
+                                    <input type="hidden" name="material_delete_true" value="True">
+                                    <input type="hidden" name="delete_materials" value="{{ material.id }}">
+                                    <button type="submit" data-translate="delete">Delete</button>
+                                </form>
+                                {% endif %}
+                            </li>
+                            {% else %}
+                            <p data-translate="no_videos_{{ lang|lower }}">No {{ lang }} YouTube videos available.</p>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Notes Section -->
+                <div class="notes-section">
+                    <h2 data-translate="notes">Notes</h2>
+                    <ul>
+                        {% for material in materials if material.type == 'note' and material.status == 'approved' %}
+                        <li>
+                            <a href="{{ url_for('download_file', material_id=material.id) }}">{{ material.title }}</a>
+                            {% if is_owner %}
+                            <form method="POST" action="{{ url_for('upload_material') }}" style="display:inline;">
+                                <input type="hidden" name="folder_id" value="{{ folder.id }}">
+                                <input type="hidden" name="material_delete_true" value="True">
+                                <input type="hidden" name="delete_materials" value="{{ material.id }}">
+                                <button type="submit" data-translate="delete">Delete</button>
+                            </form>
+                            {% endif %}
+                        </li>
+                        {% else %}
+                        <p data-translate="no_notes">No notes available.</p>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            {% if is_owner %}
+            <div class="upload-section">
+                <h2 data-translate="upload_material">Upload Material</h2>
+                <form method="POST" action="{{ url_for('upload_material') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="folder_id" value="{{ folder.id }}">
+
+                    <label for="title" data-translate="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+
+                    <label for="type" data-translate="material_type">Material Type:</label>
+                    <select id="type" name="type" required onchange="toggleFields()">
+                        <option value="" data-translate="select">Select</option>
+                        <option value="youtube" data-translate="youtube_link">YouTube Link</option>
+                        <option value="note" data-translate="note">Note</option>
+                    </select>
+
+                    <div id="language-section" class="hidden">
+                        <label for="language" data-translate="language">Language:</label>
+                        <select id="language" name="language" required>
+                            <option value="" data-translate="select_language">Select Language</option>
+                            <option value="Arabic" data-translate="language_arabic">Arabic</option>
+                            <option value="English" data-translate="language_english">English</option>
+                            <option value="Swedish" data-translate="language_swedish">Swedish</option>
+                        </select>
+                    </div>
+
+                    <div id="file-upload-section" class="hidden">
+                        <label for="file" data-translate="upload_file">Upload File:</label>
+                        <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+                    </div>
+
+                    <div id="link-section" class="hidden">
+                        <label for="link" data-translate="youtube_link">YouTube Link:</label>
+                        <input type="url" id="link" name="link" placeholder="https://www.youtube.com/">
+                    </div>
+
+                    <button type="submit" data-translate="submit">Submit</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function toggleFields() {
+            const type = document.getElementById("type").value;
+            const fileSection = document.getElementById("file-upload-section");
+            const linkSection = document.getElementById("link-section");
+            const languageSection = document.getElementById("language-section");
+            const languageSelect = document.getElementById("language");
+
+            if (type === "youtube") {
+                linkSection.classList.remove("hidden");
+                languageSection.classList.remove("hidden");
+                languageSelect.setAttribute("required", "required"); // Make language required
+                fileSection.classList.add("hidden");
+            } else if (type === "note") {
+                fileSection.classList.remove("hidden");
+                languageSection.classList.add("hidden");
+                linkSection.classList.add("hidden");
+                languageSelect.removeAttribute("required"); // Remove required from language
+            } else {
+                linkSection.classList.add("hidden");
+                fileSection.classList.add("hidden");
+                languageSection.classList.add("hidden");
+                languageSelect.removeAttribute("required"); // Remove required from language
+            }
+        }
+
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch = document.getElementById("langSwitch");
+            langSwitch.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch.addEventListener("click", () => {
+                const newLang = langSwitch.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch.dataset.lang = newLang;
+                langSwitch.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        document.getElementById("menuBtn").addEventListener("click", function () {
+            const menuWindow = document.getElementById("menuWindow");
+            menuWindow.classList.toggle("visible");
+            menuWindow.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", function (event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+
+        const moonicon = document.getElementById("moonicon");
+        moonicon.addEventListener("click", function () {
+            document.body.classList.toggle("dark-theme");
+
+            const icon = moonicon.querySelector("i");
+            if (document.body.classList.contains("dark-theme")) {
+                icon.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");
+            } else {
+                icon.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                document.querySelector("#moonicon i").className = "fa-sharp fa-solid fa-sun";
+            }
+        });
+
+        let isSubmitting = false;
+
+        document.querySelector('form').addEventListener('submit', function (event) {
+            if (isSubmitting) {
+                event.preventDefault();
+                return false;
+            }
+        
+            // Set the flag to true to prevent further submissions
+            isSubmitting = true;
+        
+            const fileInput = document.getElementById('file');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const videoExtensions = ['.mp4', '.avi', '.mov', '.mkv'];
+                const fileName = file.name.toLowerCase();
+        
+                if (videoExtensions.some(ext => fileName.endsWith(ext))) {
+                    alert('Video uploads are not allowed.');
+                    event.preventDefault();
+                    isSubmitting = false; // Reset the flag
+                    return false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

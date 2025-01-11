@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="main_title">Hv Campus Link - Main</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="nav__links">
+        <a class="logout-btn" id="wel" href="{{ url_for('welcome') }}" aria-label="Logout">
+            <i class="fa-solid fa-right-from-bracket"></i>
+        </a>
+        <a id="moonicon"><i class="fa-sharp fa-solid fa-moon"></i></a>
+        <a id="langSwitch1" data-lang="en" aria-label="Switch Language">Sv</a>
+    </div>
+    
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <div class="main-container">
+        <h1 data-translate="main_heading">University West Campus Link</h1>
+        <div class="users-search-bar">
+            <form method="GET" action="{{ url_for('search_users') }}">
+                <input type="text" name="q" placeholder="" data-translate="search_placeholder" list="user_suggestions" oninput="fetchSuggestions()" />
+                <datalist id="user_suggestions"></datalist>
+                <button type="submit" class="user-search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>            
+        </div>
+        <div class="buttons">
+            <button onclick="prfFunction()" class="main-buttons" id="prf-btn" data-translate="my_profile">My Profile</button>
+            <button onclick="prgFunction()" class="main-buttons" id="prg-btn" data-translate="programs">Programs</button>
+            <button onclick="bokFunction()" class="main-buttons" id="bok-btn" data-translate="book_exchange">Book Exchange</button>
+            <button onclick="chaFunction()" class="main-buttons" id="cha-btn" data-translate="public_chat">Public Chat</button>
+            <button onclick="conFunction()" class="main-buttons" id="con-btn" data-translate="contact_us">Contact Us</button>
+            <button onclick="abtFunction()" class="main-buttons" id="abt-btn" data-translate="about_us">About Us</button>
+        </div>
+    </div>
+    
+    <script>
+        function prfFunction() {
+            window.location.href = "{{ url_for('profile') }}";
+        }
+    
+        function prgFunction() {
+            window.location.href = "{{ url_for('programs') }}"; 
+        }
+    
+        function bokFunction() {
+            window.location.href = "{{ url_for('book_main') }}";
+        }
+    
+        function chaFunction() {
+            window.location.href = "{{ url_for('public_chat') }}";
+        }
+
+        function conFunction() {
+            window.location.href = "{{ url_for('contact_us') }}";
+        }
+
+        function abtFunction() {
+            window.location.href = "{{ url_for('about') }}";
+        }
+
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch1 = document.getElementById("langSwitch1");
+            langSwitch1.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch1.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch1.addEventListener("click", () => {
+                const newLang = langSwitch1.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch1.dataset.lang = newLang;
+                langSwitch1.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        // On page load, check the saved theme preference and apply it
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+
+            // If a theme is saved in localStorage, apply it
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";  // Show sun icon in dark mode
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";  // Show moon icon in light mode
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+            var iconElement = moonicon.querySelector("i");
+
+            // Check if dark theme is active and update the icon
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");  // Save dark mode in localStorage
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");  // Save light mode in localStorage
+            }
+        };
+
+        function fetchSuggestions() {
+            let input = document.querySelector('input[name="q"]').value.trim();
+            
+            if (input.length === 0) {
+              document.getElementById("user_suggestions").innerHTML = "";
+              return;
+            }
+            
+            // Use Fetch API to call the autocomplete endpoint
+            fetch(`/autocomplete_users?q=${encodeURIComponent(input)}`)
+              .then(response => response.json())
+              .then(data => {
+                let datalist = document.getElementById("user_suggestions");
+                datalist.innerHTML = "";
+                data.forEach(user => {
+                  let option = document.createElement("option");
+                  option.value = user.first_name + " " + user.last_name;
+                  datalist.appendChild(option);
+                });
+              })
+              .catch(error => {
+                console.error("Error fetching suggestions:", error);
+              });
+          }
+    </script>
+    
+</body>
+</html>

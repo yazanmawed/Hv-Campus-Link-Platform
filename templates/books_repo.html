@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="book_exchange_title">Hv Campus Link - Book Exchange</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Icons -->
+    <div class="nav__links">
+        <a id="moonicon">
+            <i class="fa-sharp fa-solid fa-moon"></i>
+        </a>
+        <a id="langSwitch" data-lang="en" aria-label="Switch Language">Sv</a>
+        <!-- Menu Button -->
+        <a class="menu-btn" id="menuBtn" aria-label="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <!-- Menu Window -->
+    <div id="menuWindow" class="menu-window hidden">
+        <div class="menu-header">
+            <span data-translate="menu">Menu</span>
+        </div>
+        <ul class="menu-list">
+            <li><a href="{{ url_for('main') }}" data-translate="home">Home</a></li>
+            <li><a href="{{ url_for('profile') }}" data-translate="my_profile">My Profile</a></li>
+            <li><a href="{{ url_for('programs') }}" data-translate="programs">Programs</a></li>
+            <li><a href="{{ url_for('public_chat') }}" data-translate="public_chat">Public Chat</a></li>
+            <li><a href="{{ url_for('contact_us') }}" data-translate="contact_us">Contact Us</a></li>
+            <li><a href="{{ url_for('about') }}" data-translate="about_us">About Us</a></li>
+            <li><a href="{{ url_for('logout') }}" data-translate="log_out">Log Out</a></li>
+        </ul>
+    </div>
+
+    <div class="pad_for_books_repo">
+        <!-- User's Books Section -->
+        <div class="user-books-section">
+            <h1 data-translate="book_exchange">Book Exchange</h1>
+            <h2 data-translate="your_books">Your Books</h2>
+            <div class="button-container-upload">
+                <a href="{{ url_for('upload_book') }}" class="upload-button" data-translate="sell_book">Sell your Book</a>
+            </div>
+            {% if user_books %}
+                <ul class="book-list">
+                    {% for book in user_books %}
+                    <li>
+                        <div class="book-item">
+                            <p><strong data-translate="title">Title:</strong> {{ book.title }}</p>
+                            <p><strong data-translate="author">Author:</strong> {{ book.author }}</p>
+                            <p><strong data-translate="price">Price:</strong> {{ book.price }} kr</p>
+                            <form action="{{ url_for('delete_book', book_id=book.id) }}" method="post" class="delete-book-form">
+                                <button type="submit" class="delete-button" data-translate="remove">Remove</button>
+                            </form>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p data-translate="no_books_user">You have no books listed for sale.</p>
+            {% endif %}
+        </div>
+
+        <!-- All Books Section -->
+        <div class="all-books-section">
+            <h2 data-translate="all_books">All Books</h2>
+            <label for="book_query" ></label>
+            <input
+                type="text"
+                id="book_query"
+                placeholder=""
+                data-translate="search_books_placeholder"
+                oninput="filterBooks()">
+
+            <!-- List All Books -->
+            <ul class="book-list" id="all-books-list">
+                {% for book in books %}
+                <li class="book-item">
+                    <p class="book-title"><strong data-translate="title">Title:</strong> {{ book.title }}</p>
+                    <p class="book-author"><strong data-translate="author">Author:</strong> {{ book.author }}</p>
+                    <p class="book-price"><strong data-translate="price">Price:</strong> {{ book.price }} kr</p>
+                    <p class="book-isbn"><strong data-translate="isbn">ISBN:</strong> {{ book.isbn }}</p>
+                    <a href="{{ url_for('book_detail', book_id=book.id) }}" class="details-button btn" data-translate="view_details">View Details</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if not books %}
+                <p data-translate="no_books_available">No books available!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch = document.getElementById("langSwitch");
+            langSwitch.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch.addEventListener("click", () => {
+                const newLang = langSwitch.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch.dataset.lang = newLang;
+                langSwitch.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        function filterBooks() {
+            const query = document.getElementById('book_query').value.toLowerCase();
+            const bookItems = document.querySelectorAll('#all-books-list .book-item');
+
+            bookItems.forEach(bookItem => {
+                // Extract title, author, and ISBN fields
+                const title = bookItem.querySelector('.book-title').textContent.toLowerCase();
+                const author = bookItem.querySelector('.book-author').textContent.toLowerCase();
+                const isbn = bookItem.querySelector('.book-isbn').textContent.toLowerCase();
+
+                // Check if the query matches any of these fields
+                if (title.includes(query) || author.includes(query) || isbn.includes(query)) {
+                    bookItem.style.display = ''; // Show matching book
+                } else {
+                    bookItem.style.display = 'none'; // Hide non-matching book
+                }
+            });
+        }
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+
+            // If a theme is saved in localStorage, apply it
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";  // Show sun icon in dark mode
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";  // Show moon icon in light mode
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+
+            var iconElement = moonicon.querySelector("i");
+
+            // Check if dark theme is active and update the icon
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");  // Save dark mode in localStorage
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");  // Save light mode in localStorage
+            }
+        };
+
+        document.getElementById("menuBtn").addEventListener("click", function() {
+            const menuWindow = document.getElementById("menuWindow");
+            // Toggle visibility classes
+            menuWindow.classList.toggle("hidden");
+            menuWindow.classList.toggle("visible");
+        });
+        
+        // Close the menu if clicked outside of it
+        document.addEventListener("click", function(event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+        
+            // Check if the click is outside the menu and menu button
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+        
+
+
+
+    </script>
+</body>
+</html>

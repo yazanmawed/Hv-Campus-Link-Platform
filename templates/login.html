@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="login_title">Hv Campus Link - Login</title>
+    <!-- Link the CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="nav__links">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    </div>
+
+    <div>
+        <a id="moonicon">
+            <i class="fa-sharp fa-solid fa-moon"></i>
+        </a>
+        <a id="langSwitch" data-lang="en" aria-label="Switch Language">Sv</a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <div class="login-container">
+        <h1 data-translate="login_title1">Sign In</h1>
+        
+        <!-- Display error message if present -->
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        
+        <form action="#" method="POST">
+            <input type="text" name="username" placeholder="" data-translate="email_placeholder" required>
+            <input type="password" name="password" placeholder="" data-translate="password_placeholder" required>
+            <button type="submit" class="btn" id="lgn" data-translate="sign_in">Sign In</button>
+        </form>
+        
+        <p>
+            <span data-translate="no_account">Don't have an account?</span>
+            <a class="link" href="{{ url_for('register') }}" data-translate="sign_up">Click here</a>
+        </p>
+        
+        </div>
+
+    <!-- Verification Code Popup Modal (hidden by default) -->
+    <div id="verificationModal" class="modal">
+        <div class="modal-content">
+            <h2 data-translate="verification_code">Enter Verification Code</h2>
+  
+          {% if error and show_code_popup %}
+              <!-- If the user typed an incorrect code, show error here too -->
+              <div class="error">{{ error }}</div>
+          {% endif %}
+  
+          <form action="{{ url_for('verify_code') }}" method="POST">
+              <input type="text" name="verification_code" placeholder="Verification Code" data-translate="verification_placeholder" required>
+              <button type="submit" class="btn" data-translate="verify">Verify</button>
+              <h4 data-translate="check_email">Check your email for the verification code (Check Inbox or Junk/Spam emails).</h4>
+          </form>
+        </div>
+      </div>
+  
+
+    <script>
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch = document.getElementById("langSwitch");
+            langSwitch.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch.addEventListener("click", () => {
+                const newLang = langSwitch.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch.dataset.lang = newLang;
+                langSwitch.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+        
+        // On page load, check the saved theme preference and apply it
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+
+            // If a theme is saved in localStorage, apply it
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";  // Show sun icon in dark mode
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";  // Show moon icon in light mode
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+
+            var iconElement = moonicon.querySelector("i");
+
+            // Check if dark theme is active and update the icon
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");  // Save dark mode in localStorage
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");  // Save light mode in localStorage
+            }
+        };
+
+
+        // Show verification code modal if show_code_popup is True
+        const showCodePopup = {{ 'true' if show_code_popup else 'false' }};
+        if (showCodePopup) {
+            document.getElementById('verificationModal').style.display = 'block';
+        }
+    </script>
+    
+</body>
+</html>

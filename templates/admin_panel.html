@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* General Styles */
+        h1, h2, h3 {
+            color: var(--forth-color);
+            margin-bottom: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav__links">
+        <a id="moonicon">
+            <i class="fa-sharp fa-solid fa-moon"></i>
+        </a>
+        <a class="menu-btn" id="menuBtn" aria-label="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </a>
+        <a class="logout-btn" id="wel" href="{{ url_for('welcome') }}"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </div>
+
+    <div class="admin_panel-logo-container">
+        <img src="static/images/logo.png" class="admin_panel-logo">
+    </div>
+
+    <div id="menuWindow" class="menu-window" role="dialog" aria-labelledby="menuHeader">
+        <div class="menu-header" id="menuHeader">
+            <span>Menu</span>
+        </div>
+        <ul class="menu-list">
+            <button onclick="showTab('admin_panel-users')">Users</button>
+            <button onclick="showTab('admin_panel-programs')">Programs</button>
+            <button onclick="showTab('admin_panel-courses')">Courses</button>
+            <button onclick="showTab('admin_panel-books')">Books</button>
+            <button onclick="showTab('admin_panel-chats')">Chats</button>
+            <button onclick="showTab('admin_panel-materials')">Pending Materials</button>
+            <button onclick="window.location.href='{{ url_for('main') }}'">Show User Panel</button>
+        </ul>
+    </div>
+
+    <h1>Admin Panel</h1>
+    <div id="admin_panel-users" class="admin_panel-tab {% if active_tab == 'admin_panel-users' %}active{% endif %}">
+            <h2>Users List</h2>
+
+            <!-- Users Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Phone Number</th>
+                        <th>Program</th>
+                        <th>Start Year</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr id="user-row-{{ user.id }}">
+                        <td>{{ user.id }}</td>
+                        <td>
+                            <span id="email-display-{{ user.id }}">{{ user.email }}</span>
+                            <input type="email" id="email-edit-{{ user.id }}" value="{{ user.email }}" style="display: none;">
+                        </td>
+                        <td>
+                            <span id="first-name-display-{{ user.id }}">{{ user.first_name }}</span>
+                            <input type="text" id="first-name-edit-{{ user.id }}" value="{{ user.first_name }}" style="display: none;">
+                        </td>
+                        <td>
+                            <span id="last-name-display-{{ user.id }}">{{ user.last_name }}</span>
+                            <input type="text" id="last-name-edit-{{ user.id }}" value="{{ user.last_name }}" style="display: none;">
+                        </td>
+                        <td>
+                            <span id="phone-display-{{ user.id }}">{{ user.phone_number }}</span>
+                            <input type="text" id="phone-edit-{{ user.id }}" value="{{ user.phone_number }}" style="display: none;">
+                        </td>
+                        <td>
+                            <span id="program-display-{{ user.id }}">
+                                {% for program in programs %}
+                                {% if program.id == user.program_id %}
+                                {{ program.name }}
+                                {% endif %}
+                                {% endfor %}
+                            </span>
+                            <select id="program-edit-{{ user.id }}" style="display: none;">
+                                <option value="" disabled>Select program</option>
+                                {% for program in programs %}
+                                <option value="{{ program.id }}" {% if program.id == user.program_id %}selected{% endif %}>
+                                    {{ program.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <span id="start-year-display-{{ user.id }}">{{ user.start_year }}</span>
+                            <select id="start-year-edit-{{ user.id }}" style="display: none;">
+                                <option value="" disabled>Select start year</option>
+                                {% for year in start_years %}
+                                <option value="{{ year }}" {% if year == user.start_year %}selected{% endif %}>
+                                    {{ year }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <span id="role-display-{{ user.id }}">{{ user.role }}</span>
+                            <select id="role-edit-{{ user.id }}" style="display: none;">
+                                <option value="" disabled>Select role</option>
+                                <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                            </select>
+                        </td>
+                        <td class="users_buttons">
+                            <button onclick="deleteUser({{ user.id }})" id="delete-btn-{{ user.id }}">Delete</button>
+                            <button onclick="editUser({{ user.id }})" id="edit-btn-{{ user.id }}">Edit</button>
+                            <button onclick="saveUser({{ user.id }})" id="save-btn-{{ user.id }}" style="display: none;">Save</button>                            
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Add User Form -->
+            <h3>Add New User</h3>
+            <form method="post" action="{{ url_for('admin_panel') }}">
+                <label for="first_name">First Name:</label>
+                <input type="text" name="first_name" id="first_name" required>
+            
+                <label for="last_name">Last Name:</label>
+                <input type="text" name="last_name" id="last_name" required>
+            
+                <label for="email">Email:</label>
+                <input type="email" name="email" id="email" required>
+            
+                <label for="password">Password:</label>
+                <input type="password" name="password" id="password" required>
+            
+                <label for="phone_number">Phone Number:</label>
+                <input type="text" name="phone_number" id="phone_number" required>
+
+                <label for="program">Program:</label>
+                <select name="program" id="program" required>
+                    <option value="" disabled selected>Select program</option>
+                    {% for program in programs %}
+                    <option value="{{ program.id }}">{{ program.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="start_year">Start Year:</label>
+                <select name="start_year" id="start_year" required>
+                    <option value="" disabled selected>Select start year</option>
+                    {% for year in start_years %}
+                    <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="role">Role:</label>
+                <select name="role" id="role" required>
+                    <option value="" disabled selected>Select role</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button type="submit" name="action" value="add_user">Add User</button>
+            </form>
+            
+        </div>
+        <div>
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div id="flash-messages">
+                    <ul>
+                        {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>    
+
+        <!-- Programs Tab -->
+        <div id="admin_panel-programs" class="admin_panel-tab">
+            <h2>Programs</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for program in programs %}
+                    <tr id="program-row-{{ program.id }}">
+                        <td>{{ program.id }}</td>
+                        <td>
+                            <span id="program-name-display-{{ program.id }}">{{ program.name }}</span>
+                            <input type="text" id="program-name-edit-{{ program.id }}" value="{{ program.name }}" style="display: none;">
+                        </td>
+                        <td>
+                            <button id="program-edit-btn-{{ program.id }}" class="program-edit-btn" onclick="editProgram({{ program.id }})">Edit</button>
+                            <button id="program-save-btn-{{ program.id }}" class="program-save-btn" onclick="saveProgram({{ program.id }})" style="display: none;">Save</button>
+                            <button onclick="deleteProgram({{ program.id }})" id="delete-btn-{{ program.id }}" class="program-delete-btn">Delete</button>
+
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <h3>Add Program</h3>
+            <form method="post" action="{{ url_for('admin_panel') }}?tab=programs">
+                <label for="add_program">Program Name: <input type="text" name="add_program" required></label>
+                <button type="submit" name="action" value="add_program">Add Program</button>
+            </form>
+        </div>
+
+        <!-- Courses Tab -->
+        <div id="admin_panel-courses" class="admin_panel-tab">
+            <h2>Courses</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Year</th>
+                        <th>Program ID</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for course in courses %}
+                    <tr id="user-row-{{ course.id }}">
+                        <td>{{ course.id }}</td>
+                        <td>
+                            <span id="course-name-display-{{ course.id }}">{{ course.name }}</span>
+                            <input type="text" id="course-name-edit-{{ course.id }}" value="{{ course.name }}" style="display: none;">
+                            
+                        </td>
+                        <td>
+                            <span id="year-display-{{ course.id }}">{{ course.year }}</span>
+                            <input type="text" id="year-edit-{{ course.id }}" value="{{ course.year }}" style="display: none;">
+                        </td>
+                        <td>
+                            <span id="program_id-display-{{ course.id }}">{{ course.program_id }}</span>
+                            <input type="text" id="program_id-edit-{{ course.id }}" value="{{ course.program_id }}" style="display: none;">
+                        </td>
+                        <td>
+                            <!-- Buttons with appropriate classes for styling -->
+                        <button type="button" class="course-delete-btn" onclick="deleteCourse({{ course.id }})" id="delete-btn-{{ course.id }}">Delete</button>
+                        <button type="button" class="course-edit-btn" onclick="editCourse({{ course.id }})" id="course-edit-btn-{{ course.id }}">Edit</button>
+                        <button type="button" class="course-save-btn" onclick="saveCourse({{ course.id }})" id="save-btn-course-{{ course.id }}" style="display: none;">Save</button>
+
+                        </td>                                               
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h2>Add Course</h2>
+            <form method="post" action="{{ url_for('admin_panel') }}?tab=courses">
+                <input type="hidden" name="action" value="add_course">
+                <label>Name: <input type="text" name="name" required></label>
+                <label>Year: <input type="text" name="year" required></label>
+                <label>Program ID: <input type="text" name="program_id" required></label>
+                <button type="submit">Add Course</button>
+            </form>
+        </div>
+
+        <!-- Books Tab -->
+        <div id="admin_panel-books" class="admin_panel-tab">
+            <h2>Books</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>ISBN</th>
+                        <th>Author</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Image URL</th>
+                        <th>User ID</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for book in books %}
+                    <tr>
+                        <td>{{ book.id }}</td>
+                        <td>{{ book.title }}</td>
+                        <td>{{ book.isbn }}</td>
+                        <td>{{ book.author }}</td>
+                        <td>{{ book.description }}</td>
+                        <td>{{ book.price }}</td>
+                        <td>{{ book.image_url }}</td>
+                        <td>{{ book.user_id }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin_panel') }}?tab=books">
+                                <input type="hidden" name="action" value="delete_book">
+                                <input type="hidden" name="book_id" value="{{ book.id }}">
+                                <button type="submit">Delete</button>
+                            </form>                            
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Chats Tab -->
+        <div id="admin_panel-chats" class="admin_panel-tab">
+            <h2>Chats</h2>
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Message</th>
+                        <th>Timestamp</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for chat in chats %}
+                    <tr>
+                        <td>{{ chat.id }}</td>
+                        <td>{{ chat.username }}</td>
+                        <td>{{ chat.message }}</td>
+                        <td>{{ chat.timestamp }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin_panel') }}?tab=chats">
+                                <input type="hidden" name="action" value="delete_chat">
+                                <input type="hidden" name="chat_id" value="{{ chat.id }}">
+                                <button type="submit">Delete</button>
+                            </form>                            
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+        <!-- Materials Tab -->
+        <div id="admin_panel-materials" class="admin_panel-tab">
+            <h2>Pending Materials</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Uploaded By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for material in materials %}
+                    <tr>
+                        <td>{{ material.id }}</td>
+                        <td>
+                            {% if material.type == 'youtube' %}
+                            <a href="{{ material.link }}" target="_blank" onclick="event.stopPropagation();">
+                                <i class="fa fa-play-circle"></i> {{ material.title }}
+                            </a>
+                            {% elif material.type == 'note' %}
+                            <a href="{{ url_for('download_file', material_id=material.id) }}" download>
+                                <i class="fa fa-download"></i> {{ material.title }}
+                            </a>
+                            {% else %}
+                            {{ material.title }}
+                            {% endif %}
+                        </td>
+                        <td>{{ material.type }}</td>
+                        <td>{{ material.first_name }} {{ material.last_name }}</td> <!-- Display full name -->
+                        <td>
+                            <form method="post" action="{{ url_for('admin_panel') }}">
+                                <input type="hidden" name="action" value="materials">
+                                <input type="hidden" name="value" value="approve_material">
+                                <input type="hidden" name="material_id" value="{{ material.id }}">
+                                <input type="hidden" name="active_tab" value="materials">
+                                <button type="submit" id="approve_material{{ material.id }}">Approve</button>
+                            </form>
+                            <form method="post" action="{{ url_for('admin_panel') }}">
+                                <input type="hidden" name="action" value="materials">
+                                <input type="hidden" name="value" value="reject_material">
+                                <input type="hidden" name="material_id" value="{{ material.id }}">
+                                <input type="hidden" name="active_tab" value="materials">
+                                <button type="submit" id="reject_material{{ material.id }}">Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    <script>
+        document.getElementById("menuBtn").addEventListener("click", function() {
+            const menuWindow = document.getElementById("menuWindow");
+            menuWindow.classList.toggle("visible");
+            menuWindow.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", function(event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon"; 
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+            var iconElement = moonicon.querySelector("i");
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark"); 
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light"); 
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const flashMessages = document.getElementById("flash-messages");
+            if (flashMessages) {
+                setTimeout(() => {
+                    flashMessages.style.transition = "opacity 0.5s ease";
+                    flashMessages.style.opacity = "0";
+                    setTimeout(() => {
+                        flashMessages.remove();
+                    }, 500); 
+                }, 10000); // 10 seconds appear
+            }
+        });
+        
+        function showTab(tabId) {
+            document.querySelectorAll('.admin_panel-tab').forEach(tab => tab.classList.remove('active'));
+            const selectedTab = document.getElementById(tabId);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            } else {
+                console.error(`Tab with ID "${tabId}" does not exist.`);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentTab = urlParams.get("tab") || "admin_panel-users";
+            showTab(currentTab);
+        });
+        
+        
+
+        function saveUser(userId) {
+            console.log("Save user triggered for ID:", userId);
+            const formData = new FormData();
+            formData.append("action", "edit_user");
+            formData.append("user_id", userId);
+            formData.append("email", document.getElementById(`email-edit-${userId}`).value);
+            formData.append("first_name", document.getElementById(`first-name-edit-${userId}`).value);
+            formData.append("last_name", document.getElementById(`last-name-edit-${userId}`).value);
+            formData.append("phone_number", document.getElementById(`phone-edit-${userId}`).value);
+            formData.append("program", document.getElementById(`program-edit-${userId}`).value);
+            formData.append("start_year", document.getElementById(`start-year-edit-${userId}`).value);
+            formData.append("role", document.getElementById(`role-edit-${userId}`).value);
+            fetch("/admin", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("User updated successfully!");
+                    document.getElementById(`email-display-${userId}`).textContent = formData.get("email");
+                    document.getElementById(`first-name-display-${userId}`).textContent = formData.get("first_name");
+                    document.getElementById(`last-name-display-${userId}`).textContent = formData.get("last_name");
+                    document.getElementById(`phone-display-${userId}`).textContent = formData.get("phone_number");
+                    document.getElementById(`program-display-${userId}`).textContent = document.querySelector(`#program-edit-${userId} option:checked`).textContent;
+                    document.getElementById(`start-year-display-${userId}`).textContent = formData.get("start_year");
+                    document.getElementById(`role-display-${userId}`).textContent = formData.get("role");
+                    cancelEditUser(userId);
+                } else {
+                    alert("Error saving user: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+        
+        function cancelEditUser(userId) {
+            document.getElementById(`edit-btn-${userId}`).style.display = "inline";
+            document.getElementById(`save-btn-${userId}`).style.display = "none";
+            document.querySelectorAll(`#user-row-${userId} span`).forEach(span => {
+                span.style.display = "inline";
+            });
+            document.querySelectorAll(`#user-row-${userId} input, #user-row-${userId} select`).forEach(input => {
+                input.style.display = "none";
+            });
+        }
+        
+        function deleteUser(userId) {
+            console.log("Delete User triggered for User ID:", userId);
+            if (!confirm("Are you sure you want to delete this user?")) return;
+            const formData = new FormData();
+            formData.append("action", "delete_user");
+            formData.append("user_id", userId);
+            fetch("/admin", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); 
+                if (data.success) {
+                    alert("User deleted successfully.");
+                    document.getElementById(`user-row-${userId}`).remove();
+                } else {
+                    alert("Failed to delete user: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        function editUser(userId) {
+            console.log("Edit user triggered for ID:", userId);
+            document.getElementById(`edit-btn-${userId}`).style.display = "none";
+            document.getElementById(`save-btn-${userId}`).style.display = "inline";
+            document.querySelectorAll(`#user-row-${userId} span`).forEach(span => {
+                span.style.display = "none";
+            });
+            document.querySelectorAll(`#user-row-${userId} input, #user-row-${userId} select`).forEach(input => {
+                input.style.display = "inline";
+            });
+        }
+        
+        function editCourse(courseId) {
+            console.log("Edit course triggered for ID:", courseId);
+            document.getElementById(`course-edit-btn-${courseId}`).style.display = "none";
+            document.getElementById(`save-btn-course-${courseId}`).style.display = "inline";
+            document.querySelectorAll(`#user-row-${courseId} span`).forEach(span => span.style.display = "none");
+            document.querySelectorAll(`#user-row-${courseId} input`).forEach(input => input.style.display = "inline");
+        }
+
+        function saveCourse(courseId) {
+            const nameInput = document.getElementById(`course-name-edit-${courseId}`);
+            const yearInput = document.getElementById(`year-edit-${courseId}`);
+            const programIdInput = document.getElementById(`program_id-edit-${courseId}`);
+            if (!nameInput || !yearInput || !programIdInput) {
+                console.error("Missing input elements for course:", courseId);
+                alert("Error: Some input elements are missing. Please check the DOM.");
+                return;
+            }
+        
+            const formData = new FormData();
+            formData.append("action", "edit_course");
+            formData.append("course_id", courseId);
+            formData.append("name", nameInput.value);
+
+            formData.append("year", yearInput.value);
+            formData.append("program_id", programIdInput.value);
+        
+            fetch("/admin", { method: "POST", body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Save Course Response:", data);
+                    if (data.success) {
+                        alert("Course updated successfully.");
+                        document.getElementById(`course-name-display-${courseId}`).textContent = nameInput.value;
+                        document.getElementById(`year-display-${courseId}`).textContent = yearInput.value;
+                        document.getElementById(`program_id-display-${courseId}`).textContent = programIdInput.value;
+                        cancelEditCourse(courseId);
+                    } else {
+                        alert("Error saving course: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Error in saveCourse:", error));
+        }
+        
+        function cancelEditCourse(courseId) {
+            document.getElementById(`course-edit-btn-${courseId}`).style.display = "inline";
+            document.getElementById(`save-btn-course-${courseId}`).style.display = "none";     
+            document.querySelectorAll(`#user-row-${courseId} span`).forEach(span => {
+                span.style.display = "inline";
+            });
+            document.querySelectorAll(`#user-row-${courseId} input`).forEach(input => {
+                input.style.display = "none";
+            });
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById("error-container");
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = "block";
+            }
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById("success-container");
+            if (successDiv) {
+                successDiv.textContent = message;
+                successDiv.style.display = "block"; 
+                setTimeout(() => {
+                    successDiv.style.display = "none";
+                }, 5000);
+            }
+        }
+
+        function deleteCourse(courseId) {
+            if (!confirm("Are you sure you want to delete this course?")) return;
+
+            const formData = new FormData();
+            formData.append("action", "delete_course");
+            formData.append("course_id", courseId);
+            fetch("/admin", { method: "POST", body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Delete Course Response:", data);
+                    if (data.success) {
+                        alert("Course deleted successfully.");
+                        document.getElementById(`user-row-${courseId}`).remove();
+                    } else {
+                        alert("Failed to delete course: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Error in deleteCourse:", error));
+        }
+        
+        function editProgram(programId) {
+            console.log(`Editing program with ID: ${programId}`);
+            const editButton = document.getElementById(`program-edit-btn-${programId}`);
+            const saveButton = document.getElementById(`program-save-btn-${programId}`);
+            const nameDisplay = document.getElementById(`program-name-display-${programId}`);
+            const nameInput = document.getElementById(`program-name-edit-${programId}`);
+        
+            if (!editButton) console.error(`Edit button is missing for program ID: ${programId}`);
+            if (!saveButton) console.error(`Save button is missing for program ID: ${programId}`);
+            if (!nameDisplay) console.error(`Name display is missing for program ID: ${programId}`);
+            if (!nameInput) console.error(`Name input is missing for program ID: ${programId}`);
+        
+            if (!editButton || !saveButton || !nameDisplay || !nameInput) {
+                console.error(`One or more elements are missing for program ID: ${programId}`);
+                alert(`Error: Missing elements for program ID: ${programId}. Please check the DOM.`);
+                return;
+            }
+        
+            editButton.style.display = "none";
+            saveButton.style.display = "inline";
+            nameDisplay.style.display = "none";
+            nameInput.style.display = "inline";
+        }
+        
+        function saveProgram(programId) {
+            console.log(`Saving program with ID: ${programId}`);
+            const nameInput = document.getElementById(`program-name-edit-${programId}`);
+            const nameDisplay = document.getElementById(`program-name-display-${programId}`);
+            const editButton = document.getElementById(`program-edit-btn-${programId}`);
+            const saveButton = document.getElementById(`program-save-btn-${programId}`);
+        
+            if (!nameInput || !nameDisplay || !editButton || !saveButton) {
+                console.error(`Missing element(s) for program ID: ${programId}`);
+                return;
+            }
+        
+            const formData = new FormData();
+            formData.append("action", "edit_program");
+            formData.append("program_id", programId);
+            formData.append("name", nameInput.value);
+            fetch("/admin", { method: "POST", body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Program updated successfully.");
+                        nameDisplay.textContent = nameInput.value;
+                        cancelEditProgram(programId);
+                    } else {
+                        alert("Error saving program: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Error in saveProgram:", error));
+        }
+        
+        function deleteProgram(programId) {
+            console.log("Delete program triggered for ID:", programId);
+            if (!confirm("Are you sure you want to delete this program?")) return;
+            const formData = new FormData();
+            formData.append("action", "delete_program");
+            formData.append("program_id", programId);
+
+            fetch("/admin", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Program deleted successfully!");
+                    document.getElementById(`program-row-${programId}`).remove();
+                } else {
+                    alert("Error deleting program: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        function cancelEditProgram(programId) {
+            console.log(`Canceling edit for program ID: ${programId}`);
+            const editButton = document.getElementById(`program-edit-btn-${programId}`);
+            const saveButton = document.getElementById(`program-save-btn-${programId}`);
+            const nameDisplay = document.getElementById(`program-name-display-${programId}`);
+            const nameInput = document.getElementById(`program-name-edit-${programId}`);
+        
+            if (!editButton || !saveButton || !nameDisplay || !nameInput) {
+                console.error(`Failed to toggle visibility for program ID: ${programId}`);
+                if (!editButton) console.error(`Missing element: program-edit-btn-${programId}`);
+                if (!saveButton) console.error(`Missing element: program-save-btn-${programId}`);
+                if (!nameDisplay) console.error(`Missing element: program-name-display-${programId}`);
+                if (!nameInput) console.error(`Missing element: program-name-edit-${programId}`);
+                return;
+            }
+        
+            editButton.style.display = "inline"; 
+            saveButton.style.display = "none";  
+            nameDisplay.style.display = "inline"; 
+            nameInput.style.display = "none";  
+        }
+    </script>
+</body>
+</html>

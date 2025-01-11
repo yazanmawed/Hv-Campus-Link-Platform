@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="upload_book_title">Hv Campus Link - Upload Book</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="nav__links">
+        <a id="moonicon">
+            <i class="fa-sharp fa-solid fa-moon"></i>
+        </a>
+        <a id="langSwitch" data-lang="en" aria-label="Switch Language">Sv</a>
+        <a class="menu-btn" id="menuBtn" aria-label="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <div id="menuWindow" class="menu-window hidden">
+        <div class="menu-header">
+            <span data-translate="menu">Menu</span>
+        </div>
+        <ul class="menu-list">
+            <li><a href="{{ url_for('main') }}" data-translate="home">Home</a></li>
+            <li><a href="{{ url_for('profile') }}" data-translate="my_profile">My Profile</a></li>
+            <li><a href="{{ url_for('programs') }}" data-translate="programs">Programs</a></li>
+            <li><a href="{{ url_for('book_main') }}" data-translate="book_exchange">Book Exchange</a></li>
+            <li><a href="{{ url_for('public_chat') }}" data-translate="public_chat">Public Chat</a></li>
+            <li><a href="{{ url_for('contact_us') }}" data-translate="contact_us">Contact Us</a></li>
+            <li><a href="{{ url_for('about') }}" data-translate="about_us">About Us</a></li>
+            <li><a href="{{ url_for('logout') }}" data-translate="log_out">Log Out</a></li>
+        </ul>
+    </div>
+
+    <div class="upload-book-container">
+        <h1 data-translate="upload_book_heading">Upload a New Book</h1>
+        
+
+        <div class="upload-book-form-wrapper">
+            <form action="{{ url_for('upload_book') }}" method="POST" enctype="multipart/form-data">
+                <label for="title" data-translate="title">Title</label>
+                <input type="text" name="title" id="title" required aria-label="true" placeholder="" data-translate="title_placeholder" required="">
+
+                <label for="isbn" data-translate="isbn">ISBN</label>
+                <input type="text" name="isbn" id="isbn" required aria-label="true" placeholder="" data-translate="isbn_placeholder" required="">
+
+                <label for="author" data-translate="author">Author</label>
+                <input type="text" name="author" id="author" required aria-label="true" placeholder="" data-translate="author_placeholder" required="">
+
+                <label for="description" data-translate="description">Description</label>
+                <textarea name="description" id="description" required aria-label="true" placeholder="" data-translate="description_placeholder" required=""></textarea>
+
+                <label for="price" data-translate="price">Price</label>
+                <input type="number" name="price" id="price" step="0.01" required aria-label="true" placeholder="" data-translate="price_placeholder" required="">
+
+                <label for="image_url" data-translate="image_url">Image URL</label>
+                <input type="url" name="image_url" id="image_url" required aria-label="true" placeholder="" data-translate="image_url_placeholder" required="">
+
+                <button type="submit" data-translate="add_book">Add Book</button>
+            </form>
+
+            <!-- Image preview container -->
+            <div class="upload-book-image-preview" id="imagePreview">
+                <span data-translate="image_preview_note">The image will be updated based on the URL link.</span>
+            </div>
+        </div>
+
+    <script>
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch = document.getElementById("langSwitch");
+            langSwitch.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch.addEventListener("click", () => {
+                const newLang = langSwitch.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch.dataset.lang = newLang;
+                langSwitch.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        document.getElementById("menuBtn").addEventListener("click", function() {
+            const menuWindow = document.getElementById("menuWindow");
+            menuWindow.classList.toggle("visible");
+            menuWindow.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", function(event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+            var iconElement = moonicon.querySelector("i");
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");
+            }
+        };
+
+        // Image preview functionality with dynamic aspect ratio and full coverage
+        const imageUrlInput = document.getElementById('image_url');
+        const imagePreview = document.getElementById('imagePreview');
+
+        imageUrlInput.addEventListener('input', function() {
+            const url = imageUrlInput.value;
+            if (url) {
+                const img = new Image();
+                img.src = url;
+
+                img.onload = function() {
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
+
+                    // Adjust the height based on the container's width to maintain aspect ratio
+                    imagePreview.style.height = `${imagePreview.clientWidth / aspectRatio}px`;
+
+                    // Insert the image into the preview container with object-fit: cover
+                    imagePreview.innerHTML = `<img src="${url}" alt="Book Image" style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px;" />`;
+                };
+            } else {
+                // Reset to placeholder text if URL is empty
+                imagePreview.innerHTML = `<span>Image of the book</span>`;
+                imagePreview.style.height = "450px"; // Reset to default height
+            }
+        });
+    </script>
+</body>
+</html>

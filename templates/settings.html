@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="settings_title">Hv Campus Link - Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav__links">
+        <a id="moonicon"><i class="fa-sharp fa-solid fa-moon"></i></a>
+        <a id="langSwitch" data-lang="en" aria-label="Switch Language">Sv</a>
+        <a class="menu-btn" id="menuBtn" aria-label="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <div id="menuWindow" class="menu-window hidden">
+        <div class="menu-header">
+            <span data-translate="menu">Menu</span>
+        </div>
+        <ul class="menu-list">
+            <li><a href="{{ url_for('main') }}" data-translate="home">Home</a></li>
+            <li><a href="{{ url_for('profile') }}" data-translate="my_profile">My Profile</a></li>
+            <li><a href="{{ url_for('programs') }}" data-translate="programs">Programs</a></li>
+            <li><a href="{{ url_for('book_main') }}" data-translate="book_exchange">Book Exchange</a></li>
+            <li><a href="{{ url_for('public_chat') }}" data-translate="public_chat">Public Chat</a></li>
+            <li><a href="{{ url_for('contact_us') }}" data-translate="contact_us">Contact Us</a></li>
+            <li><a href="{{ url_for('about') }}" data-translate="about_us">About Us</a></li>
+            <li><a href="{{ url_for('logout') }}" data-translate="log_out">Log Out</a></li>
+        </ul>
+    </div>
+
+    <!-- Settings Container -->
+    <div class="settings-container">
+        <h1 data-translate="edit_settings">Edit Your Profile</h1>
+        <form id="settingsForm" method="POST" enctype="multipart/form-data">
+            <!-- Profile Picture -->
+            <div class="settings-profile-picture" id="circle">
+                {% if user.profile_image %}
+                    <img id="settingsPicture" 
+                        src="{{ user.profile_image }}" 
+                        class="active" 
+                        alt="Profile Picture">
+                {% else %}
+                    <i class="fa-solid fa-user"></i>
+                    <img id="settingsPicture" src="" alt="Profile Picture">
+                {% endif %}
+            </div>
+            <div class="settings-buttons">
+                <label for="profilePictureUpload" class="change-pic-btn" data-translate="change_picture">Change Picture</label>
+                <input type="file" id="profilePictureUpload" name="profile_picture" style="display: none;" onchange="previewProfilePicture()">
+                <button type="button" class="remove-pic-btn" onclick="removeProfilePicture()" data-translate="remove_picture">Remove Picture</button>
+            </div>
+            
+            <!-- Personal Information -->
+            <div class="settings-info">
+                <label for="bio"><strong data-translate="bio">Bio</strong></label>
+                <textarea id="bio" name="bio" placeholder="" data-translate="bio_placeholder">{{ user.bio if user.bio else '' }}</textarea>
+
+                <label for="first_name"><strong data-translate="first_name">First Name</strong></label>
+                <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" placeholder="" data-translate="first_name_placeholder" required>
+
+                <label for="last_name"><strong data-translate="last_name">Last Name</strong></label>
+                <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" placeholder="" data-translate="last_name_placeholder" required>
+
+                <label for="phone_number"><strong data-translate="phone_number">Phone Number</strong></label>
+                <input type="tel" id="phone_number" name="phone_number" value="{{ user.phone_number }}" placeholder="" data-translate="phone_number_placeholder" required pattern="[0-9]{10}">
+
+                <label for="password"><strong data-translate="new_password">New Password</strong></label>
+                <input type="password" id="password" name="password" placeholder="" data-translate="new_password_placeholder">
+
+                <label for="program"><strong data-translate="program">Change Program</strong></label>
+                <select name="program" id="program-settings" required>
+                    <option value="" disabled selected>Change program</option>
+                    {% for program in programs %}
+                    <option value="{{ program.id }}" {% if user.program_id == program.id %}selected{% endif %}>
+                        {{ program.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <label for="start_year"><strong data-translate="start_year">Change Start Year</strong></label>
+                <select name="start_year" id="start_year-settings" required>
+                    <option value="" disabled selected>Change start year</option>
+                    {% for year in start_years %}
+                    <option value="{{ year }}" {% if user.start_year == year %}selected{% endif %}>
+                        {{ year }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Save Changes Button -->
+            <button class="save-changes-btn" type="button" data-translate="save_changes">Save Changes</button>
+
+        </form>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch = document.getElementById("langSwitch");
+            langSwitch.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch.addEventListener("click", () => {
+                const newLang = langSwitch.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch.dataset.lang = newLang;
+                langSwitch.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        // JavaScript to handle the menu button and window toggle
+        document.getElementById("menuBtn").addEventListener("click", function() {
+            const menuWindow = document.getElementById("menuWindow");
+            menuWindow.classList.toggle("visible");
+            menuWindow.classList.toggle("hidden");
+        });
+
+        // Close the menu if the user clicks outside of it
+        document.addEventListener("click", function(event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+
+        function previewProfilePicture() {
+            const input = document.getElementById('profilePictureUpload');
+            const preview = document.getElementById('settingsPicture');
+            const icon = document.querySelector('#circle .fa-user');
+
+            const file = input.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('Please select a valid image file.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    icon.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('No file selected.');
+            }
+        }
+
+        async function removeProfilePicture() {
+            try {
+                const response = await fetch('/remove_profile_picture', { method: 'POST' });
+                if (response.ok) {
+                    alert('Profile picture removed successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to remove profile picture.');
+                }
+            } catch (error) {
+                console.error('Error removing profile picture:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+
+        // Delete folder
+        /*
+        async function deleteFolder(folderId) {
+            if (!confirm("Are you sure you want to delete this folder?")) return;
+
+            const response = await fetch('/delete_folder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ folder_id: folderId })
+            });
+
+            if (response.ok) {
+                alert("Folder deleted successfully!");
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert(error.message || "An error occurred.");
+            }
+        }
+            */
+
+            async function saveSettings() {
+            const form = document.getElementById("settingsForm");
+
+            // Let the browser handle validation
+            if (!form.checkValidity()) {
+                form.reportValidity(); // Show tooltip for invalid fields
+                return;
+            }
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/settings', { method: 'POST', body: formData });
+
+                if (response.ok) {
+                    alert("Settings updated successfully!");
+                    window.location.href = "/profile";
+                } else {
+                    const error = await response.json();
+                    alert(error.message || "An error occurred.");
+                }
+            } catch (err) {
+                alert("Failed to save settings. Please try again.");
+                console.error(err);
+            }
+        }
+
+        // Attach the saveSettings function
+        document.querySelector(".save-changes-btn").addEventListener("click", saveSettings);
+
+
+
+
+        // Dark mode toggle
+        document.addEventListener("click", function(event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+            }
+        });
+        var moonicon = document.getElementById("moonicon");
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+            var iconElement = moonicon.querySelector("i");
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");
+            }
+        };
+    </script>
+</body>
+</html>

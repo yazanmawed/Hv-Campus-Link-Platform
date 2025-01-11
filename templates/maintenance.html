@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="login_title">Hv Campus Link - Maintenance</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Times New Roman", Times, serif;
+            background: linear-gradient(to right, #74abd8, white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+        }
+
+        .logo img {
+            max-width: 300px;
+            height: auto;
+        }
+
+        .container {
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .maintenance-icon {
+            font-size: 100px;
+            margin-bottom: 10px;
+            animation: glow 1s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% {
+                color: red;
+            }
+            100% {
+                color: #74abd8;
+            }
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        p {
+            font-size: 16px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="/static/images/logo.png" alt="Company Logo">
+    </div>
+
+    <div class="container">
+        <div class="maintenance-icon">&#9888;</div>
+        <h1>We'll be back soon!</h1>
+        <p>Our website is currently undergoing maintenance. We apologize for the inconvenience and appreciate your patience.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-translate="register_title">Hv Campus Link - Sign Up</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+</head>
+
+<body>
+    <div class="nav__links">
+        <a class="register_to_welcome-btn" id="mai" href="{{ url_for('welcome') }}" aria-label="Welcome">
+            <i class="fa-solid fa-door-open" style="color: #74abd8;"></i>
+        </a>
+        <a id="moonicon">
+            <i class="fa-sharp fa-solid fa-moon"></i>
+        </a>
+        <a id="langSwitch1" data-lang="en" aria-label="Switch Language">Sv</a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <div class="register-container">
+        <h1 data-translate="register_heading">Sign Up</h1>
+
+        <form id="registration_form" action="/register" enctype="multipart/form-data" method="POST">
+            <div class="register-info">
+
+                <label for="profile_image" id="circle">
+                    <img id="profilePreview" src=""/>
+                    <i class="fa-solid fa-user"></i>
+                </label>
+                <input type="file" id="profile_image" name="profile_picture" accept="image/*" onchange="uploadPicture()" style="display: none;">
+
+                <p><strong data-translate="first_name">First Name</strong></p>
+                <input id="first_name" name="first_name" type="text" placeholder="" data-translate="first_name_placeholder" required>
+
+                <p><strong data-translate="last_name">Last Name</strong></p>
+                <input id="last_name" name="last_name" type="text" placeholder="" data-translate="last_name_placeholder" required>
+
+                <p><strong data-translate="email">Email</strong></p>
+                <input id="email" name="email" type="email"  placeholder="" data-translate="email_placeholder1" required>
+
+                <p><strong data-translate="password">Password</strong></p>
+                <input id="password" name="password" type="password" placeholder="" data-translate="password_placeholder1" required>
+
+                <p><strong data-translate="phone_number">Phone Number</strong></p>
+                <input id="phone_number" name="phone_number" type="tel" placeholder="" data-translate="phone_number_placeholder" required pattern="[0-9]{10}">
+
+                <p><strong data-translate="program">Program</strong></p>
+                <select id="program" name="program" required>
+                    <option value="" data-translate="program_placeholder">Select your program</option>
+                </select>
+
+                <p><strong data-translate="start_year">Start Year</strong></p>
+                <select id="start_year" name="start_year" required>
+                    <option value="" data-translate="start_year_placeholder">Select your start year</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-submit-register" data-translate="register_button">Sign Up</button>
+        </form>
+
+        <div id="register_message" class="hidden"></div>
+        <h5 id="login_link" class="hidden">
+            <span data-translate="login_prompt">Let's Sign In?</span>
+            <a href="{{ url_for('login') }}" class="link" data-translate="login_here">Sign In</a>
+        </h5>
+    </div>
+
+    <script>
+        document.getElementById('registration_form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+        
+                if (response.ok) {
+                    document.querySelector('.register-container').innerHTML = `
+                        <h1>Success</h1>
+                        <p>Thank you ${formData.get('first_name')} for registering. Please check your email for the verification code (Check Inbox or Junk/Spam emails).</p>
+                        <a href="{{ url_for('login') }}" class="link" data-translate="login_here">Sign In</a>
+                    `;
+                } else {
+                    alert(result.error || "An error occurred. Please try again.");
+                }
+            } catch (error) {
+                console.error('Error during registration:', error);
+                alert('An unexpected error occurred. Please try again later.');
+            }
+        });
+
+        function uploadPicture() {
+            const input = document.getElementById('profile_image');
+            const preview = document.getElementById('profilePreview');
+            const icon = document.querySelector('#circle .fa-user');
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                icon.style.display = 'none';
+            }
+            
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch1 = document.getElementById("langSwitch1");
+            langSwitch1.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch1.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch1.addEventListener("click", () => {
+                const newLang = langSwitch1.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch1.dataset.lang = newLang;
+                langSwitch1.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        document.addEventListener("DOMContentLoaded", async function() {
+            const programDropdown = document.getElementById("program");
+            const startYearDropdown = document.getElementById("start_year");
+            try {
+                const response = await fetch("/get_programs");
+                if (!response.ok) throw new Error("Failed to fetch programs");
+                const programs = await response.json();
+
+                programs.forEach(program => {
+                    const option = document.createElement("option");
+                    option.value = program.id;
+                    option.textContent = program.name;
+                    programDropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error loading programs:", error);
+            }
+
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear; year >= currentYear - 10; year--) {
+                const option = document.createElement("option");
+                option.value = year;
+                option.textContent = year;
+                startYearDropdown.appendChild(option);
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+            const iconElement = moonicon.querySelector("i");
+
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");
+            }
+        };
+    </script>
+</body>
+</html>

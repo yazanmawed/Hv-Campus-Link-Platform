@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hv Campus Link - {{ user.first_name }} {{ user.last_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon.png') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav__links">
+        <a id="moonicon"><i class="fa-sharp fa-solid fa-moon"></i></a>
+        <a id="langSwitch" data-lang="en" aria-label="Switch Language">Sv</a>
+        <a class="menu-btn" id="menuBtn" aria-label="Menu"><i class="fa-solid fa-bars"></i></a>
+    </div>
+
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" class="logo-container">
+    </div>
+
+    <div id="menuWindow" class="menu-window hidden">
+        <div class="menu-header">
+            <span data-translate="menu">Menu</span>
+        </div>
+        <ul class="menu-list">
+            <li><a href="{{ url_for('main') }}" data-translate="home">Home</a></li>
+            <li><a href="{{ url_for('profile') }}" data-translate="my_profile">My Profile</a></li>
+            <li><a href="{{ url_for('programs') }}" data-translate="programs">Programs</a></li>
+            <li><a href="{{ url_for('book_main') }}" data-translate="book_exchange">Book Exchange</a></li>
+            <li><a href="{{ url_for('public_chat') }}" data-translate="public_chat">Public Chat</a></li>
+            <li><a href="{{ url_for('contact_us') }}" data-translate="contact_us">Contact Us</a></li>
+            <li><a href="{{ url_for('about') }}" data-translate="about_us">About Us</a></li>
+            <li><a href="{{ url_for('logout') }}" data-translate="log_out">Log Out</a></li>
+        </ul>
+    </div>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+        <!-- Sidebar -->
+        <div class="profile-sidebar">
+            <div class="profile-picture" id="circle">
+                <img id="profilePicture" src="{{ user.profile_image }}">
+                {% if not user.profile_image %}
+                    <i class="fa-solid fa-user"></i>
+                {% endif %}
+            </div>
+            <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+            <p class="bio">
+                {{ user.bio if user.bio else "<span data-translate='bio_default1'>No bio provided.</span>" | safe }}
+            </p>
+        </div>
+
+        <!-- Main Section -->
+        <div class="profile-main">
+            <div class="info-section">
+                <label data-translate="program">Program</label>
+                <p1>{{ user.program_name }}</p1>
+
+                <label data-translate="start_year">Start Year</label>
+                <p1>{{ user.start_year }}</p1>
+            </div>
+
+            <h3 data-translate="materials">Materials</h3>
+            <div class="folders-section">
+                {% if folders %}
+                    {% for folder in folders %}
+                    <div class="folder">
+                        <a href="{{ url_for('view_folder', folder_id=folder.id) }}">
+                            <i class="fa-solid fa-folder"></i>
+                            <p>{{ folder.name }}</p>
+                        </a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p data-translate="no_materials">No materials to display.</p>
+                {% endif %}
+            </div>
+
+    <script>
+        // Language switcher functionality
+        const currentLang = localStorage.getItem("language") || "en";
+            const langSwitch = document.getElementById("langSwitch");
+            langSwitch.textContent = currentLang === "en" ? "Sv" : "En";
+            langSwitch.dataset.lang = currentLang;
+
+            loadLanguage(currentLang);
+
+            langSwitch.addEventListener("click", () => {
+                const newLang = langSwitch.dataset.lang === "en" ? "sv" : "en";
+                localStorage.setItem("language", newLang);
+                langSwitch.dataset.lang = newLang;
+                langSwitch.textContent = newLang === "en" ? "Sv" : "En";
+                loadLanguage(newLang);
+            });
+
+            async function loadLanguage(lang) {
+                try {
+                    const response = await fetch(`/static/lang/${lang}.json`);
+                    const translations = await response.json();
+                    document.querySelectorAll("[data-translate]").forEach((el) => {
+                        const key = el.dataset.translate;
+                        if (translations[key]) {
+                            if (el.tagName === "TEXTAREA" || el.tagName === "INPUT") {
+                                el.setAttribute("placeholder", translations[key]);
+                            } else {
+                                el.textContent = translations[key];
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error("Error loading translations:", error);
+                }
+            }
+
+        // Preview profile picture
+        function previewProfilePicture() {
+            const icon = document.querySelector('#circle .fa-user');
+        }
+
+
+        // JavaScript to handle the menu button and window toggle
+        document.getElementById("menuBtn").addEventListener("click", function() {
+            const menuWindow = document.getElementById("menuWindow");
+            menuWindow.classList.toggle("visible");
+            menuWindow.classList.toggle("hidden");
+        });
+
+        // Close the menu if the user clicks outside of it
+        document.addEventListener("click", function(event) {
+            const menuWindow = document.getElementById("menuWindow");
+            const menuBtn = document.getElementById("menuBtn");
+
+            if (!menuWindow.contains(event.target) && !menuBtn.contains(event.target)) {
+                menuWindow.classList.add("hidden");
+                menuWindow.classList.remove("visible");
+            }
+        });
+
+        // On page load, check the saved theme preference and apply it
+        document.addEventListener("DOMContentLoaded", function() {
+            const savedTheme = localStorage.getItem("theme");
+            const moonicon = document.getElementById("moonicon");
+            const iconElement = moonicon.querySelector("i");
+
+            // If a theme is saved in localStorage, apply it
+            if (savedTheme === "dark") {
+                document.body.classList.add("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-sun";  // Show sun icon in dark mode
+            } else {
+                document.body.classList.remove("dark-theme");
+                iconElement.className = "fa-sharp fa-solid fa-moon";  // Show moon icon in light mode
+            }
+        });
+
+        var moonicon = document.getElementById("moonicon");
+
+        moonicon.onclick = function() {
+            document.body.classList.toggle("dark-theme");
+
+            var iconElement = moonicon.querySelector("i");
+
+            // Check if dark theme is active and update the icon
+            if (document.body.classList.contains("dark-theme")) {
+                iconElement.className = "fa-sharp fa-solid fa-sun";
+                localStorage.setItem("theme", "dark");  // Save dark mode in localStorage
+            } else {
+                iconElement.className = "fa-sharp fa-solid fa-moon";
+                localStorage.setItem("theme", "light");  // Save light mode in localStorage
+            }
+        };
+    </script>
+    
+</body>
+</html>
