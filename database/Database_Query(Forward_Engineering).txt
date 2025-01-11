@@ -1,0 +1,201 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema mydb
+-- -----------------------------------------------------
+-- -----------------------------------------------------
+-- Schema sql11738878
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema sql11738878
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `sql11738878` DEFAULT CHARACTER SET latin1 ;
+USE `sql11738878` ;
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`programs`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`programs` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 37
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`users`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`users` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(255) NOT NULL,
+  `first_name` VARCHAR(100) NOT NULL,
+  `last_name` VARCHAR(100) NOT NULL,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `phone_number` VARCHAR(15) NULL DEFAULT NULL,
+  `profile_image` BLOB NULL DEFAULT NULL,
+  `role` ENUM('user', 'admin') NULL DEFAULT 'user',
+  `program_id` INT(11) NULL DEFAULT NULL,
+  `start_year` INT(11) NULL DEFAULT NULL,
+  `bio` TEXT NULL DEFAULT NULL,
+  `generated_code` INT(6) NULL DEFAULT NULL,
+  `verify` TINYINT(1) NULL DEFAULT '0',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `email` (`email` ASC) VISIBLE,
+  INDEX `fk_program_idx` (`program_id` ASC) VISIBLE,
+  CONSTRAINT `fk_program`
+    FOREIGN KEY (`program_id`)
+    REFERENCES `sql11738878`.`programs` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+AUTO_INCREMENT = 112
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`books`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`books` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(255) NOT NULL,
+  `isbn` VARCHAR(13) NULL DEFAULT NULL,
+  `author` VARCHAR(255) NULL DEFAULT NULL,
+  `description` TEXT NULL DEFAULT NULL,
+  `price` DECIMAL(10,2) NULL DEFAULT NULL,
+  `image_url` VARCHAR(255) NULL DEFAULT NULL,
+  `user_id` INT(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `user_id` (`user_id` ASC) VISIBLE,
+  CONSTRAINT `books_ibfk_1`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `sql11738878`.`users` (`id`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 31
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`chat`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`chat` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(255) NULL DEFAULT NULL,
+  `message` TEXT NULL DEFAULT NULL,
+  `timestamp` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 168
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`courses`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`courses` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 849
+DEFAULT CHARACTER SET = latin1;
+
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`folders`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`folders` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `user_id` INT(11) NOT NULL,
+  `course_id` INT(11) NULL DEFAULT NULL,
+  `name` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `user_id_idx` (`user_id` ASC) VISIBLE,
+  INDEX `course_id_idx` (`course_id` ASC) VISIBLE,
+  CONSTRAINT `folders_ibfk_course`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `sql11738878`.`courses` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `user_id`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `sql11738878`.`users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+AUTO_INCREMENT = 2987
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_unicode_ci;
+
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`materials`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`materials` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `folder_id` INT(11) NULL DEFAULT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `link` TEXT NULL DEFAULT NULL,
+  `course_id` INT(11) NULL DEFAULT NULL,
+  `type` VARCHAR(20) NULL DEFAULT NULL,
+  `file_data` LONGBLOB NULL DEFAULT NULL,
+  `file_extension` VARCHAR(10) NULL DEFAULT NULL,
+  `language` VARCHAR(50) NULL DEFAULT NULL,
+  `status` ENUM('pending', 'approved', 'rejected') NULL DEFAULT 'pending',
+  `user_id` INT(11) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `course_id` (`course_id` ASC) VISIBLE,
+  INDEX `materials_ibfk_2` (`folder_id` ASC) VISIBLE,
+  INDEX `materials_ibfk_3` (`user_id` ASC) VISIBLE,
+  CONSTRAINT `materials_ibfk_3`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `sql11738878`.`users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `materials_ibfk_1`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `sql11738878`.`courses` (`id`),
+  CONSTRAINT `materials_ibfk_2`
+    FOREIGN KEY (`folder_id`)
+    REFERENCES `sql11738878`.`folders` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+AUTO_INCREMENT = 231
+DEFAULT CHARACTER SET = latin1;
+
+-- -----------------------------------------------------
+-- Table `sql11738878`.`program_course`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sql11738878`.`program_course` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `program_id` INT(11) NOT NULL,
+  `course_id` INT(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `program_id` (`program_id` ASC) VISIBLE,
+  INDEX `course_id` (`course_id` ASC) VISIBLE,
+  CONSTRAINT `program_course_ibfk_1`
+    FOREIGN KEY (`program_id`)
+    REFERENCES `sql11738878`.`programs` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `program_course_ibfk_2`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `sql11738878`.`courses` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
+ENGINE = InnoDB
+AUTO_INCREMENT = 862
+DEFAULT CHARACTER SET = latin1;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
